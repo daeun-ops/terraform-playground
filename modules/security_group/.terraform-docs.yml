@@ -23,6 +23,8 @@ content: |-
   {{ include "docs/example1.tf" }}
   ```
 
+
+
   {{ .Inputs }}
   {{ .Outputs }}  
   {{ .Resources }}
