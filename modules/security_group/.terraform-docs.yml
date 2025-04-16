@@ -22,9 +22,6 @@ content: |-
   ```hcl
   {{ include "docs/example1.tf" }}
   ```
-
-
-
   {{ .Inputs }}
   {{ .Outputs }}  
   {{ .Resources }}
