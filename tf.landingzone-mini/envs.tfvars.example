@@ -1,0 +1,43 @@
+envs = {
+  dev = {
+    cidr_block    = "10.10.0.0/16"
+    az_count      = 2
+    public_cidrs  = 2
+    private_cidrs = 2
+    tags = { env = "dev", owner = "sophie" }
+
+    services = {
+      web = {
+        ports  = [80, 443]
+        cidrs  = ["0.0.0.0/0"]
+        egress = true
+      }
+      ssh = {
+        ports  = [22]
+        cidrs  = ["203.0.113.0/24"] # 회사 IP만 허용 예시
+        egress = false
+      }
+    }
+  }
+
+  prod = {
+    cidr_block    = "10.20.0.0/16"
+    az_count      = 3
+    public_cidrs  = 3
+    private_cidrs = 3
+    tags = { env = "prod", owner = "platform" }
+
+    services = {
+      web = {
+        ports  = [80, 443]
+        cidrs  = ["0.0.0.0/0"]
+        egress = true
+      }
+      bastion = {
+        ports  = [22]
+        cidrs  = ["198.51.100.0/24"]
+        egress = false
+      }
+    }
+  }
+}
