@@ -5,7 +5,7 @@ output:
 sort:
   enabled: false
 settings:
-  anchor: true
+  anchor: false
 sections:
   show:
     - header
