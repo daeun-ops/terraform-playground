@@ -1,6 +1,6 @@
-# terraform-playground
+# terraform-playground🌳
 
-# Terraform Infrastructure as Code – E-Commerce Platform
+## Terraform Infrastructure as Code – E-Commerce Platform
 
 This repository demonstrates production-grade Terraform patterns for building and operating an AWS-based e-commerce infrastructure.  
 Each directory represents a distinct IaC concept – from basic for-expressions to full environment-aware, data-driven modules.
