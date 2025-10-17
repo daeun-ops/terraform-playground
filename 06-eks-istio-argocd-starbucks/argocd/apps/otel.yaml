@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: otel-gateway
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    chart: opentelemetry-collector
+    targetRevision: 0.93.1
+    helm:
+      values: |
+        {{- (.Files.Get "06-eks-istio-argocd-starbucks/observability/values-otel-gateway.yaml") | nindent 8 -}}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
