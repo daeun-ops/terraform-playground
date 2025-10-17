@@ -16,3 +16,8 @@ spec:
     automated:
       prune: true
       selfHeal: true
+spec:
+  source:
+    repoURL: https://github.com/daeun-ops/terraform-playground.git
+    targetRevision: main
+    path: 06-eks-istio-argocd-starbucks/argocd/apps      
