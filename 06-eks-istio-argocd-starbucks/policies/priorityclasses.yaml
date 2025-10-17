@@ -1,0 +1,15 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: critical-payment
+value: 100000
+globalDefault: false
+description: "Critical payment flows"
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: batch-ml
+value: 1000
+globalDefault: false
+description: "Batch ML jobs"
