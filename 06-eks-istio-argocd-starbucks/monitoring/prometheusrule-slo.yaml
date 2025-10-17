@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: starbucks-slo
+  namespace: monitoring
+  labels: { role: slo }
+spec:
+  groups:
+  - name: error-budget
+    rules:
+    # 1h / 5m 고번율 경보 (빠른 감지)
+    - alert: APIHighErrorRateFastBurn
+      expr: |
+        (
+          sum(rate(istio_requests_total{destination_workload="api",response_code=~"5.."}[5m]))
+          /
+          sum(rate(istio_requests_total{destination_workload="api"}[5m]))
+        ) > 0.05
+      for: 15m
+      labels: { severity: critical, service: api }
+      annotations:
+        summary: "API high error rate (fast burn)"
+        runbook_url: https://github.com/daeun-ops/terraform-playground/blob/main/06-eks-istio-argocd-starbucks/RUNBOOK.md
+    # 6h / 30m 저번율 경보 (지속적 문제)
+    - alert: APIHighErrorRateSlowBurn
+      expr: |
+        (
+          sum(rate(istio_requests_total{destination_workload="api",response_code=~"5.."}[30m]))
+          /
+          sum(rate(istio_requests_total{destination_workload="api"}[30m]))
+        ) > 0.02
+      for: 2h
+      labels: { severity: warning, service: api }
+      annotations:
+        summary: "API elevated error rate (slow burn)"
