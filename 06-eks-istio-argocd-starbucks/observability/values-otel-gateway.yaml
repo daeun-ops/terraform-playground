@@ -73,3 +73,7 @@ resources:
   limits:
     cpu: 1
     memory: 1Gi
+# observability/values-otel-gateway.yaml
+extraEnvs:
+  - name: CLUSTER_NAME
+    value: "starbucks-eks"           # <<<<< 여기 원하는 클러스터명
