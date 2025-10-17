@@ -1,0 +1,75 @@
+mode: "deployment"
+image:
+  repository: otel/opentelemetry-collector-contrib
+  tag: 0.110.0
+presets:
+  kubernetesAttributes: true
+  logsCollection: false  # 로그는 promtail 사용
+  hostMetrics: false
+service:
+  type: ClusterIP
+  ports:
+    otlp:
+      enabled: true
+      containerPort: 4317
+      servicePort: 4317
+      protocol: TCP
+    otlp-http:
+      enabled: true
+      containerPort: 4318
+      servicePort: 4318
+      protocol: TCP
+config:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+        http:
+  processors:
+    batch:
+      send_batch_size: 8192
+      timeout: 5s
+    memory_limiter:
+      check_interval: 2s
+      limit_percentage: 75
+      spike_limit_percentage: 15
+    attributes:
+      actions:
+      - key: k8s.cluster.name
+        action: upsert
+        value: ${CLUSTER_NAME}
+  exporters:
+    prometheus:
+      endpoint: "0.0.0.0:8889"
+    loki:
+      endpoint: "http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push"
+      default_labels_enabled:
+        exporter: true
+        job: true
+    otlphttp/tempo:
+      # Tempo Distributor or Gateway endpoint
+      endpoint: "http://tempo-distributor.observability.svc.cluster.local:4318"
+  extensions:
+    health_check: {}
+  service:
+    extensions: [health_check]
+    pipelines:
+      metrics:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [prometheus]
+      traces:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [otlphttp/tempo]
+      logs:
+        receivers: [otlp]
+        processors: [memory_limiter, batch]
+        exporters: [loki]
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
