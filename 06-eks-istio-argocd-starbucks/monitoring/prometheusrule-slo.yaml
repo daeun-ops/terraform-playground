@@ -6,30 +6,50 @@ metadata:
   labels: { role: slo }
 spec:
   groups:
-  - name: error-budget
+  - name: api-slo
     rules:
-    # 1h / 5m 고번율 경보 (빠른 감지)
-    - alert: APIHighErrorRateFastBurn
+    # Checkout/Order/Payment 공통 가용성 SLO: 99.9% / p95 < 300ms
+    - record: service:request_total:rate1m
+      expr: sum by (destination_workload) (rate(istio_requests_total{reporter="destination", response_code!~"0.."}[1m]))
+    - record: service:request_5xx:rate1m
+      expr: sum by (destination_workload) (rate(istio_requests_total{reporter="destination", response_code=~"5.."}[1m]))
+    - record: service:latency_ms_p95:rate1m
       expr: |
-        (
-          sum(rate(istio_requests_total{destination_workload="api",response_code=~"5.."}[5m]))
-          /
-          sum(rate(istio_requests_total{destination_workload="api"}[5m]))
-        ) > 0.05
+        histogram_quantile(0.95, sum(rate(istio_request_duration_milliseconds_bucket[1m])) by (le, destination_workload))
+
+    # 멀티 윈도우 번율 (fast/slow burn) — "아침피크 07~10, 점심 11:30~13:30, 오후 15~17"에 민감하게
+    - alert: APIHighErrorRateFastBurn
+      expr: ( service:request_5xx:rate1m{destination_workload="api"} / service:request_total:rate1m{destination_workload="api"} ) > 0.05
       for: 15m
       labels: { severity: critical, service: api }
       annotations:
         summary: "API high error rate (fast burn)"
         runbook_url: https://github.com/daeun-ops/terraform-playground/blob/main/06-eks-istio-argocd-starbucks/RUNBOOK.md
-    # 6h / 30m 저번율 경보 (지속적 문제)
+
     - alert: APIHighErrorRateSlowBurn
-      expr: |
-        (
-          sum(rate(istio_requests_total{destination_workload="api",response_code=~"5.."}[30m]))
-          /
-          sum(rate(istio_requests_total{destination_workload="api"}[30m]))
-        ) > 0.02
+      expr: ( avg_over_time(service:request_5xx:rate1m{destination_workload="api"}[30m]) / avg_over_time(service:request_total:rate1m{destination_workload="api"}[30m]) ) > 0.02
       for: 2h
       labels: { severity: warning, service: api }
       annotations:
-        summary: "API elevated error rate (slow burn)"
+        summary: "API elevated error rate (slow burn, sustained)"
+
+    - alert: APILatencyP95Degraded
+      expr: service:latency_ms_p95:rate1m{destination_workload="api"} > 0.3
+      for: 20m
+      labels: { severity: warning, service: api }
+      annotations:
+        summary: "API p95 latency > 300ms"
+
+  - name: business-kpi
+    rules:
+    # 주문량 이상감지 현재 10분 주문수 vs 지난 7일 동일 요일/시간대 평균
+    - record: starbucks:orders:rate10m
+      expr: increase(starbucks_orders_total[10m])
+    - record: starbucks:orders:baseline
+      expr: avg_over_time(starbucks:orders:rate10m[7d])
+    - alert: OrdersDropAgainstBaseline
+      expr: (starbucks:orders:rate10m / (starbucks:orders:baseline + 1e-9)) < 0.5
+      for: 20m
+      labels: { severity: critical, service: order }
+      annotations:
+        summary: "Orders dropped <50% vs. 7d baseline (possible checkout issues)"
