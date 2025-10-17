@@ -8,3 +8,15 @@ pilot:
   autoscaleEnabled: true
 meshConfig:
   accessLogFile: /dev/stdout
+
+
+  # helm/istio-values.yaml (추가)
+meshConfig:
+  defaultProviders:
+    tracing:
+    - otel
+  extensionProviders:
+  - name: otel
+    opentelemetry:
+      service: otel-gateway-collector.observability.svc.cluster.local
+      port: 4317
