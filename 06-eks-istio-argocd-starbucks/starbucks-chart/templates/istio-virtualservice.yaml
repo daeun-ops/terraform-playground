@@ -4,8 +4,10 @@ metadata:
   name: api-vs
   namespace: prod
 spec:
-  hosts: ["api.prod.svc.cluster.local"]
-  gateways: ["istio-system/ingress-gateway"]
+  hosts:
+  - api.starbucks.example.com           # <<<<< 동일한 호스트
+  gateways:
+  - istio-system/ingress-gateway
   http:
   - name: primary
     route:
