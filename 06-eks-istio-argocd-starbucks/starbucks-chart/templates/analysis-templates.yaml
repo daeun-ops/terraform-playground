@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: prom-http-5xx
+  namespace: prod
+spec:
+  metrics:
+  - name: http_5xx_rate
+    interval: 30s
+    count: 6
+    successCondition: result[0] < 0.02   # 2% 미만이어야 패스
+    failureCondition: result[0] >= 0.05  # 5% 이상이면 즉시 실패
+    provider:
+      prometheus:
+        address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+        query: |
+          sum(rate(istio_requests_total{reporter="destination",destination_workload=~"{{args.service}}"}[1m]))
+          and ignoring(response_code)
+          sum(rate(istio_requests_total{reporter="destination",destination_workload=~"{{args.service}}",response_code=~"5.."}[1m]))
+          /
+          sum(rate(istio_requests_total{reporter="destination",destination_workload=~"{{args.service}}"}[1m]))
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: prom-latency-p95
+  namespace: prod
+spec:
+  metrics:
+  - name: http_latency_p95
+    interval: 30s
+    count: 6
+    successCondition: result[0] < 0.400  # p95 < 400ms
+    failureCondition: result[0] >= 0.800 # p95 >= 800ms
+    provider:
+      prometheus:
+        address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
+        query: |
+          histogram_quantile(0.95,
+            sum(rate(istio_request_duration_milliseconds_bucket{reporter="destination",destination_workload=~"{{args.service}}"}[1m]))
+            by (le))
