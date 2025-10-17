@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: api-vs
+  namespace: prod
+spec:
+  hosts: ["api.prod.svc.cluster.local"]
+  gateways: ["istio-system/ingress-gateway"]
+  http:
+  - name: primary
+    route:
+    - destination:
+        host: api.prod.svc.cluster.local
+        subset: v1
+      weight: 100
+    timeout: 3s
+    retries:
+      attempts: 2
+      perTryTimeout: 1s
+      retryOn: "5xx,connect-failure,reset"
