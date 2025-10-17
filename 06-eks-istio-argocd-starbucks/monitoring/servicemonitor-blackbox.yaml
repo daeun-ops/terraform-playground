@@ -1,0 +1,17 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: blackbox-probe
+  namespace: monitoring
+spec:
+  endpoints:
+  - port: http
+    interval: 30s
+    path: /probe
+    params:
+      module: [http_2xx]
+      target: ["http://api.prod.svc.cluster.local/healthz"]   # 내부 경로
+  selector:
+    matchLabels: { app: blackbox-exporter }
+  namespaceSelector:
+    matchNames: ["monitoring"]
