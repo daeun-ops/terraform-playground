@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://vmware-tanzu.github.io/helm-charts
+    chart: velero
+    targetRevision: 6.0.0
+    helm:
+      values: |
+        configuration:
+          provider: aws
+          backupStorageLocation:
+            - name: default
+              bucket: "<YOUR_BACKUP_BUCKET>"
+              config:
+                region: {{ .Values.region | default "ap-northeast-2" }}
+        credentials:
+          useSecret: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
