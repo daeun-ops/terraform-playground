@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: starbucks-grafana-dashboards
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  starbucks-api.json: |
+    {
+      "title": "Starbucks – API SLO",
+      "panels": [
+        { "type":"stat","title":"p95 latency(ms)","targets":[{"expr":"service:latency_ms_p95:rate1m{destination_workload=\"api\"}*1000"}]},
+        { "type":"stat","title":"5xx rate","targets":[{"expr":"(service:request_5xx:rate1m{destination_workload=\"api\"}/service:request_total:rate1m{destination_workload=\"api\"})*100"}]},
+        { "type":"graph","title":"Requests","targets":[{"expr":"service:request_total:rate1m{destination_workload=\"api\"}"}]}
+      ],
+      "schemaVersion": 36, "version": 1
+    }
