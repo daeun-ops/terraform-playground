@@ -1,0 +1,31 @@
+config:
+  clients:
+  - url: http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push
+  snippets:
+    pipelineStages:
+    - cri: {}
+    - docker: {}
+    - match:
+        selector: '{namespace="prod"}'
+        stages:
+        - labeldrop:
+            - filename
+        - labelkeep:
+            - namespace
+            - pod
+            - container
+    - match:
+        selector: '{app="api"}'
+        stages:
+        - regex:
+            expression: ".*(?P<level>INFO|WARN|ERROR).*"
+        - labels:
+            level:
+  positions:
+    filename: /run/promtail/positions.yaml
+serviceMonitor:
+  enabled: true
+tolerations:
+- key: "node-role.kubernetes.io/control-plane"
+  operator: "Exists"
+  effect: "NoSchedule"
