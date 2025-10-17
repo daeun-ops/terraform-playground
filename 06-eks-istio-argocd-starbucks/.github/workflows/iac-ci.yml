@@ -1,0 +1,23 @@
+name: IaC CI
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: hashicorp/setup-terraform@v3
+      with: { terraform_version: 1.6.6 }
+    - name: Terraform fmt/validate (06 module)
+      working-directory: 06-eks-istio-argocd-starbucks
+      run: |
+        terraform init -backend=false
+        terraform fmt -check
+        terraform validate
+    - name: Helm lint (starbucks chart)
+      run: |
+        sudo snap install helm --classic || true
+        helm lint 06-eks-istio-argocd-starbucks/starbucks-chart
+    - name: Kubeconform manifests
+      uses: docker://ghcr.io/yannh/kubeconform:latest
+      with:
+        args: -strict -summary -kubernetes-version 1.29 -schema-location default 06-eks-istio-argocd-starbucks
