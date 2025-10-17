@@ -1,31 +1,23 @@
 config:
-  clients:
-  - url: http://loki-gateway.observability.svc.cluster.local/loki/api/v1/push
   snippets:
     pipelineStages:
     - cri: {}
     - docker: {}
+    # 공통 라벨 클린업 + 팀 라벨 보존
     - match:
-        selector: '{namespace="prod"}'
+        selector: '{namespace=~"prod|dev|qa|admin|team-1|security-team"}'
         stages:
-        - labeldrop:
-            - filename
-        - labelkeep:
-            - namespace
-            - pod
-            - container
+        - labeldrop: [filename, stream]
+        - labelkeep: [namespace, pod, container, app, team]
+    # 결제/주문 서비스의 레벨 추출 + traceID 추출(있다면)
     - match:
-        selector: '{app="api"}'
+        selector: '{namespace="prod", app=~"api|order|payment"}'
         stages:
         - regex:
-            expression: ".*(?P<level>INFO|WARN|ERROR).*"
+            expression: '.*trace_id[=: ](?P<trace_id>[a-f0-9-]{16,32}).*'
+        - labels:
+            trace_id:
+        - regex:
+            expression: '.*\b(?P<level>DEBUG|INFO|WARN|ERROR|FATAL)\b.*'
         - labels:
             level:
-  positions:
-    filename: /run/promtail/positions.yaml
-serviceMonitor:
-  enabled: true
-tolerations:
-- key: "node-role.kubernetes.io/control-plane"
-  operator: "Exists"
-  effect: "NoSchedule"
