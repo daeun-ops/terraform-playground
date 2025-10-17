@@ -1,0 +1,32 @@
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: default-otel
+  namespace: prod
+spec:
+  tracing:
+  - providers:
+    - name: otel
+    randomSamplingPercentage: 10.0
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: default-otel
+  namespace: dev
+spec:
+  tracing:
+  - providers:
+    - name: otel
+    randomSamplingPercentage: 10.0
+---
+apiVersion: telemetry.istio.io/v1alpha1
+kind: Telemetry
+metadata:
+  name: default-otel
+  namespace: qa
+spec:
+  tracing:
+  - providers:
+    - name: otel
+    randomSamplingPercentage: 10.0
