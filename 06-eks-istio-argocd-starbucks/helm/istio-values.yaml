@@ -10,13 +10,13 @@ meshConfig:
   accessLogFile: /dev/stdout
 
 
-  # helm/istio-values.yaml (추가)
+# helm/istio-values.yaml
 meshConfig:
   defaultProviders:
     tracing:
-    - otel
+      - otel
   extensionProviders:
-  - name: otel
-    opentelemetry:
-      service: otel-gateway-collector.observability.svc.cluster.local
-      port: 4317
+    - name: otel
+      opentelemetry:
+        service: otel-gateway-collector.observability.svc.cluster.local  # <<<<< OTel Collector 서비스 FQDN
+        port: 4317
