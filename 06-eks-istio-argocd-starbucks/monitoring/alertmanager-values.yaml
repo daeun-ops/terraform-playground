@@ -1,0 +1,17 @@
+config:
+  route:
+    receiver: "slack-noti"
+    group_by: ["alertname","service"]
+    routes:
+    - matchers: [ severity="critical" ]
+      receiver: "slack-noti"
+      group_wait: 0s
+      group_interval: 1m
+      repeat_interval: 15m
+  receivers:
+  - name: "slack-noti"
+    slack_configs:
+    - api_url: "<SLACK_WEBHOOK_URL>"
+      channel: "#oncall"
+      title: "{{ .CommonLabels.alertname }} ({{ .Status }})"
+      text: "{{ range .Alerts }}• *{{ .Labels.service }}*: {{ .Annotations.summary }}{{ end }}"
