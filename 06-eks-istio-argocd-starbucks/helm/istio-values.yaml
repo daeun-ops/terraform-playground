@@ -1,1 +1,10 @@
-
+global:
+  proxy:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+pilot:
+  autoscaleEnabled: true
+meshConfig:
+  accessLogFile: /dev/stdout
