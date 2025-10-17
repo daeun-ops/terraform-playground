@@ -1,1 +1,16 @@
-
+grafana:
+  enabled: true
+  service:
+    type: LoadBalancer
+prometheus:
+  prometheusSpec:
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    probeSelectorNilUsesHelmValues: false
+    scrapeInterval: 30s
+kube-state-metrics:
+  enabled: true
+prometheus-node-exporter:
+  enabled: true
+alertmanager:
+  enabled: true
